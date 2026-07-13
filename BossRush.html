@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boss Rush - Clean Animation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f13;
+            color: #e0e0e0;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #16161f;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stage-badge {
+            background: #ffa502;
+            color: #000;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        /* FIELD PERTEMPURAN */
+        .battle-field {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        /* Karakter & Animasi Bernapas (Idle) */
+        .char-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+        .sprite {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            animation: breath 3s ease-in-out infinite;
+        }
+        /* Pembungkus player agar SVG bisa dianimasikan */
+        #player-wrapper .sprite {
+            animation: breath 2.5s ease-in-out infinite;
+        }
+
+        @keyframes breath {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        /* ANIMASI SERANG & TERKENA HIT */
+        .attack-forward {
+            animation: dashForward 0.2s ease-in-out !important;
+        }
+        @keyframes dashForward {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(20px) scale(1.1); }
+            100% { transform: translateY(0); }
+        }
+        .player-attack {
+            animation: playerDash 0.2s ease-in-out !important;
+        }
+        @keyframes playerDash {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px) scale(1.1); }
+            100% { transform: translateY(0); }
+        }
+        .shake {
+            animation: shakeAnim 0.2s ease-in-out 2 !important;
+        }
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* DAMAGE POP UP */
+        .damage-text {
+            position: absolute;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ff4757;
+            text-shadow: 2px 2px #000;
+            animation: floatUp 0.6s ease-out forwards;
+            pointer-events: none;
+            z-index: 10;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.3); }
+        }
+
+        /* UI HP BAR MINIMALIS */
+        .hp-container {
+            width: 80%;
+            margin-top: 5px;
+        }
+        .hp-bar-bg {
+            background: #2f3542;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .hp-bar {
+            height: 100%;
+            width: 100%;
+            transition: width 0.2s ease;
+        }
+        .boss-hp { background: #ff4757; box-shadow: 0 0 8px #ff4757; }
+        .player-hp { background: #2ed573; box-shadow: 0 0 8px #2ed573; }
+        
+        /* TOMBOL & KONTROL */
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        button {
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            transition: 0.1s;
+        }
+        button:active { transform: scale(0.95); }
+        .btn-attack { background: #ff4757; grid-column: span 2; font-size: 1.2rem; }
+        .btn-heal { background: #2ed573; }
+        select {
+            padding: 15px;
+            font-size: 1rem;
+            border-radius: 12px;
+            background: #2f3542;
+            color: white;
+            border: none;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="stage-badge" id="stage-text">STAGE 1</div>
+
+    <div class="battle-field">
+        <div class="char-wrapper" id="boss-wrapper">
+            <div id="boss-damage-pos"></div>
+            <img id="boss-image" class="sprite" src="" alt="Boss">
+            <div class="hp-container">
+                <div class="hp-bar-bg"><div id="boss-hp-bar" class="hp-bar boss-hp"></div></div>
+            </div>
+        </div>
+
+        <div class="char-wrapper" id="player-wrapper">
+            <div id="player-damage-pos"></div>
+            <div id="player-image" class="sprite">
+                <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" xmlns="https://share.google/doaaCcax4lrR4XX7H">
+                    <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="#1e90ff" stroke="#fff" stroke-width="1.5"/>
+                    <path d="M12 6V18M8 10H16" stroke="#ffa502" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="hp-container">
+                <div class="hp-bar-bg"><div id="player-hp-bar" class="hp-bar player-hp"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <button class="btn-attack" onclick="serang()">⚔️ ATTACK</button>
+        <button class="btn-heal" onclick="heal()">❤️ HEAL</button>
+        <div>
+            <select id="weapon-select" onchange="gantiSenjata()">
+                <option value="pedang">🗡️ 10-20</option>
+                <option value="panah">🏹 15-25</option>
+                <option value="kapak">🪓 5-40</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<script>
+    const senjata = {
+        pedang: { min: 10, max: 20 },
+        panah: { min: 15, max: 25 },
+        kapak: { min: 5, max: 40 }
+    };
+
+    const daftarBoss = [
+        { hp: 50, dmg: 8, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/88.gif" },
+        { hp: 80, dmg: 12, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/56.gif" },
+        { hp: 110, dmg: 15, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/67.gif" },
+        { hp: 140, dmg: 20, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/94.gif" },
+        { hp: 180, dmg: 18, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/95.gif" },
+        { hp: 220, dmg: 25, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/123.gif" },
+        { hp: 260, dmg: 28, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/130.gif" },
+        { hp: 300, dmg: 30, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/85.gif" },
+        { hp: 350, dmg: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif" },
+        { hp: 500, dmg: 45, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/150.gif" }
+    ];
+
+    let bossSekarang = 0;
+    let playerHp = 200;
+    let playerMaxHp = 200;
+    let bossHp = daftarBoss[0].hp;
+    let senjataDipilih = senjata.pedang;
+
+    const bossImg = document.getElementById("boss-image");
+    const playerImg = document.getElementById("player-image");
+
+    function popDamage(targetId, jumlah, isHeal = false) {
+        const target = document.getElementById(targetId);
+        const pop = document.createElement("div");
+        pop.className = "damage-text";
+        if (isHeal) {
+            pop.style.color = "#2ed573";
+            pop.innerText = `+${jumlah}`;
+        } else {
+            pop.innerText = `-${jumlah}`;
+        }
+        target.appendChild(pop);
+        setTimeout(() => pop.remove(), 600);
+    }
+
+    function updateVisual() {
+        const currentBoss = daftarBoss[bossSekarang];
+        document.getElementById("stage-text").innerText = `STAGE ${bossSekarang + 1} / 10`;
+        bossImg.src = currentBoss.img;
+        document.getElementById("boss-hp-bar").style.width = `${(bossHp / currentBoss.hp) * 100}%`;
+        document.getElementById("player-hp-bar").style.width = `${(playerHp / playerMaxHp) * 100}%`;
+    }
+
+    function gantiSenjata() {
+        senjataDipilih = senjata[document.getElementById("weapon-select").value];
+    }
+
+    function serang() {
+        if (playerHp <= 0 || bossSekarang >= 10) return;
+
+        // Animasi Player Maju Nyerang
+        playerImg.classList.add("player-attack");
+        setTimeout(() => playerImg.classList.remove("player-attack"), 200);
+
+        // Hitung Damage ke Boss
+        let dmgPlayer = Math.floor(Math.random() * (senjataDipilih.max - senjataDipilih.min + 1)) + senjataDipilih.min;
+        bossHp = Math.max(0, bossHp - dmgPlayer);
+        
+        // Efek Boss Kena Hit
+        setTimeout(() => {
+            bossImg.classList.add("shake");
+            popDamage("boss-damage-pos", dmgPlayer);
+            updateVisual();
+            setTimeout(() => bossImg.classList.remove("shake"), 200);
+        }, 100);
+
+        // Cek jika Boss Mati
+        if (bossHp <= 0) {
+            setTimeout(() => {
+                bossSekarang++;
+                if (bossSekarang < 10) {
+                    playerMaxHp += 25;
+                    playerHp = playerMaxHp;
+                    bossHp = daftarBoss[bossSekarang].hp;
+                    updateVisual();
+                } else {
+                    alert("🏆 KAMU MENANG!");
+                }
+            }, 500);
+            return;
+        }
+
+        // Serangan Balik Boss
+        setTimeout(serangBalik, 500);
+    }
+
+    function serangBalik() {
+        if (bossHp <= 0) return;
+        const currentBoss = daftarBoss[bossSekarang];
+        
+        // Animasi Boss Maju Nyerang
+        bossImg.classList.add("attack-forward");
+        setTimeout(() => bossImg.classList.remove("attack-forward"), 200);
+
+        let dmgBoss = Math.floor(Math.random() * (currentBoss.dmg - 5 + 1)) + 5;
+        playerHp = Math.max(0, playerHp - dmgBoss);
+
+        // Efek Player Kena Hit
+        setTimeout(() => {
+            playerImg.classList.add("shake");
+            popDamage("player-damage-pos", dmgBoss);
+            updateVisual();
+            setTimeout(() => playerImg.classList.remove("shake"), 200);
+
+            if (playerHp <= 0) {
+                alert("💀 GAME OVER");
+            }
+        }, 100);
+    }
+
+    function heal() {
+        if (playerHp <= 0 || bossHp <= 0) return;
+        playerHp = Math.min(playerMaxHp, playerHp + 50);
+        popDamage("player-damage-pos", 50, true);
+        updateVisual();
+        setTimeout(serangBalik, 400);
+    }
+
+    updateVisual();
+</script>
+
+</body>
+</html>
